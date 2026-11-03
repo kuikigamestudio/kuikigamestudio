@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Kuiki Game Studio</title>
+
+    <meta name="description" content="Kuiki Game Studio — независимая игровая студия. Мы создаём игры, в которые хочется возвращаться снова и снова.">
+
+    <!-- Иконки сайта KGS -->
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="shortcut icon" href="images/favicon-32x32.png">
+
+    <!-- Стили сайта -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <a class="brand" href="index.html">
+        <img src="images/logo.png" alt="KGS Logo">
+        <span>Kuiki Game Studio</span>
+    </a>
+
+    <nav>
+        <a class="active" href="index.html">Главная</a>
+        <a href="games.html">Игры</a>
+        <a href="news.html">Новости</a>
+        <a href="about.html">О студии</a>
+        <a href="social.html">Соцсети</a>
+    </nav>
+</header>
+
+<main>
+
+    <!-- Главный экран -->
+    <section class="hero">
+        <p class="eyebrow">RUSSIAN GAME STUDIO</p>
+
+        <h1>
+            Добро пожаловать в<br>
+            <span>Kuiki Game Studio</span>
+        </h1>
+
+        <p>
+            Мы создаём игры, в которые хочется возвращаться снова и снова.
+        </p>
+
+        <a class="main-button" href="games.html">Наши игры</a>
+    </section>
+
+    <!-- Новости -->
+    <section class="news">
+
+        <div class="section-heading">
+            <img src="images/logo.png" alt="Логотип KGS">
+
+            <div>
+                <p class="eyebrow">БУДЬ В КУРСЕ</p>
+                <h2>Главные новости</h2>
+            </div>
+        </div>
+
+        <div id="news-list">
+            <p>Загрузка новостей...</p>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    © 2026 Kuiki Game Studio
+</footer>
+
+<script>
+const SUPABASE_URL = "https://ppbyuydjtfyclpyjrxvx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_119-LcRFKSqZb80JDPnoaQ_KV3qQDvH";
+
+async function loadNews() {
+    const newsList = document.getElementById("news-list");
+
+    try {
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/news?select=*&published=eq.true&order=created_at.desc&limit=1`,
+            {
+                headers: {
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": `Bearer ${SUPABASE_KEY}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Ошибка загрузки: ${response.status}`);
+        }
+
+        const news = await response.json();
+
+        newsList.replaceChildren();
+
+        if (news.length === 0) {
+            newsList.textContent = "Пока новостей нет.";
+            return;
+        }
+
+        news.forEach(item => {
+            const article = document.createElement("article");
+            article.className = "news-card";
+
+            if (item.image_url) {
+                try {
+                    const imageUrl = new URL(item.image_url);
+
+                    if (
+                        imageUrl.protocol === "https:" ||
+                        imageUrl.protocol === "http:"
+                    ) {
+                        const img = document.createElement("img");
+                        img.src = imageUrl.href;
+                        img.alt = item.title || "Новость KGS";
+                        article.appendChild(img);
+                    }
+                } catch {
+                    console.warn("Некорректный URL изображения");
+                }
+            }
+
+            const content = document.createElement("div");
+            content.className = "news-content";
+
+            const status = document.createElement("span");
+            status.className = "status";
+            status.textContent = "Опубликовано";
+
+            const title = document.createElement("h3");
+            title.textContent = item.title || "Без заголовка";
+
+            const description = document.createElement("p");
+            description.textContent = item.body || "";
+            description.style.whiteSpace = "pre-wrap";
+
+            content.append(status, title, description);
+            article.appendChild(content);
+
+            newsList.appendChild(article);
+        });
+
+    } catch (error) {
+        console.error("Ошибка загрузки новостей:", error);
+        newsList.textContent =
+            "Не удалось загрузить новости. Попробуйте позже.";
+    }
+}
+
+loadNews();
+</script>
+
+</body>
+</html>

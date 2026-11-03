@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Новости — Kuiki Game Studio</title>
+    <meta name="description" content="Новости и события Kuiki Game Studio.">
+
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="shortcut icon" href="images/logo.png">
+    <link rel="apple-touch-icon" href="images/logo.png">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <a class="brand" href="index.html">
+        <img src="images/logo.png" alt="KGS Logo">
+        <span>Kuiki Game Studio</span>
+    </a>
+
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="games.html">Игры</a>
+        <a class="active" href="news.html">Новости</a>
+        <a href="about.html">О студии</a>
+        <a href="social.html">Соцсети</a>
+    </nav>
+</header>
+
+<main>
+
+    <section class="news">
+
+        <div class="section-heading">
+            <img src="images/logo.png" alt="Логотип KGS">
+
+            <div>
+                <p class="eyebrow">БУДЬ В КУРСЕ</p>
+                <h2>Архив новостей</h2>
+            </div>
+        </div>
+
+        <div id="news-list">
+            <p>Загрузка новостей...</p>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    © 2026 Kuiki Game Studio
+</footer>
+
+<script>
+const SUPABASE_URL = "https://ppbyuydjtfyclpyjrxvx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_119-LcRFKSqZb80JDPnoaQ_KV3qQDvH";
+
+async function loadNews() {
+    const newsList = document.getElementById("news-list");
+
+    try {
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/news?select=*&published=eq.true&order=created_at.desc`,
+            {
+                headers: {
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": `Bearer ${SUPABASE_KEY}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Ошибка загрузки: ${response.status}`);
+        }
+
+        const news = await response.json();
+
+        newsList.replaceChildren();
+
+        // Последняя новость показывается на главной странице.
+        // Поэтому в архиве начинаем со второй новости.
+        const archive = news.slice(1);
+
+        if (archive.length === 0) {
+            newsList.textContent = "Архив пока пуст.";
+            return;
+        }
+
+        archive.forEach(item => {
+            const article = document.createElement("article");
+            article.className = "news-card";
+
+            const content = document.createElement("div");
+            content.className = "news-content";
+
+            const date = document.createElement("p");
+            date.className = "eyebrow";
+
+            const publishedDate = new Date(item.created_at);
+
+            date.textContent = Number.isNaN(publishedDate.getTime())
+                ? ""
+                : new Intl.DateTimeFormat("ru-RU", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    timeZone: "Europe/Moscow"
+                }).format(publishedDate);
+
+            const status = document.createElement("span");
+            status.className = "status";
+            status.textContent = "Опубликовано";
+
+            const title = document.createElement("h3");
+            title.textContent = item.title || "Без заголовка";
+
+            const description = document.createElement("p");
+            description.style.whiteSpace = "pre-wrap";
+            description.textContent = item.body || "";
+
+            content.append(date, status, title, description);
+
+            if (item.image_url) {
+                try {
+                    const imageUrl = new URL(item.image_url);
+
+                    if (
+                        imageUrl.protocol === "https:" ||
+                        imageUrl.protocol === "http:"
+                    ) {
+                        const img = document.createElement("img");
+                        img.src = imageUrl.href;
+                        img.alt = item.title || "Новость KGS";
+                        article.appendChild(img);
+                    }
+                } catch {
+                    console.warn("Некорректный URL изображения");
+                }
+            }
+
+            article.appendChild(content);
+            newsList.appendChild(article);
+        });
+
+    } catch (error) {
+        console.error("Ошибка загрузки архива:", error);
+
+        newsList.textContent =
+            "Не удалось загрузить архив. Попробуйте позже.";
+    }
+}
+
+loadNews();
+</script>
+
+</body>
+</html>
