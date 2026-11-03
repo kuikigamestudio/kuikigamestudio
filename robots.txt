@@ -1,0 +1,5 @@
+
+User-agent: *
+Allow: /
+
+Sitemap: https://kuikigamestudio.github.io/kuikigamestudio/sitemap.xml
